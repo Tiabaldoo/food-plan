@@ -1,0 +1,1 @@
+window.Store={key:'foodPlanStateV1',load(){try{return JSON.parse(localStorage.getItem(this.key))||{}}catch(e){return{}}},save(state){localStorage.setItem(this.key,JSON.stringify(state))}};
