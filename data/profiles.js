@@ -1,0 +1,1 @@
+window.PROFILES={ivan:{name:'Иван',target:1900},wife:{name:'Жена',target:1550}};
