@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f7f7f5" />
+  <title>Наше меню</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">План питания</p>
+      <h1>Наше меню</h1>
+    </div>
+    <div class="view-switch" role="group" aria-label="Режим просмотра">
+      <button class="view-btn active" data-view="today">Сегодня</button>
+      <button class="view-btn" data-view="week">Неделя</button>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="summary-card">
+      <div>
+        <span class="summary-label">Иван</span>
+        <strong><span id="ivanCalories">0</span> / 1900 ккал</strong>
+      </div>
+      <div>
+        <span class="summary-label">Жена</span>
+        <strong><span id="wifeCalories">0</span> / 1550 ккал</strong>
+      </div>
+    </section>
+
+    <section id="menuContainer" class="menu-container" aria-live="polite"></section>
+  </main>
+
+  <div id="recipeModal" class="modal" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal></div>
+    <article class="modal-card" role="dialog" aria-modal="true" aria-labelledby="recipeTitle">
+      <button class="modal-close" data-close-modal aria-label="Закрыть">×</button>
+      <div id="recipeContent"></div>
+    </article>
+  </div>
+
+  <script src="data/recipes.js"></script>
+  <script src="data/profiles.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
