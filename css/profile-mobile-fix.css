@@ -1,0 +1,18 @@
+/* Mobile profile stability fixes */
+.profile-section,#profileRoot,.profiles-grid,.profile-card,.shared-settings{min-width:0;max-width:100%}
+.profile-card,.profile-mobile-tabs,.profile-fields label,.shared-fields label,.manual-target,.calorie-goal,.target-mode-option,.body-details{position:relative}
+#profileRoot input,#profileRoot select,#profileRoot button,#profileRoot summary{pointer-events:auto;touch-action:manipulation}
+.profile-fields input,.profile-fields select,.shared-fields input,.manual-target input{max-width:100%;min-width:0}
+.profile-fields select{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.profile-activity-field small{display:block;color:var(--muted);font-size:.7rem;line-height:1.35;margin-top:1px}
+@media(max-width:650px){
+  html,body{max-width:100%;overflow-x:hidden}
+  .page-shell{width:100%;max-width:100%;overflow-x:clip}
+  .profile-section,#profileRoot{width:100%;max-width:100%;overflow-x:clip}
+  .profiles-intro,.profile-mobile-tabs,.profiles-grid,.shared-settings{width:100%;max-width:520px;margin-left:auto;margin-right:auto}
+  .profile-card{width:100%;max-width:520px;overflow:hidden}
+  .profile-fields,.calorie-goals,.calculation-explain,.target-mode,.shared-fields,.body-fields{min-width:0;max-width:100%}
+  .profile-fields>* ,.calorie-goals>* ,.calculation-explain>* ,.target-mode>* ,.shared-fields>* ,.body-fields>*{min-width:0}
+  .profile-fields select{width:100%;max-width:100%}
+  .profile-mobile-tab,.calorie-goal,.target-mode-option>span{min-height:44px}
+}
