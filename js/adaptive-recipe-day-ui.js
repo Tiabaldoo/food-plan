@@ -6,11 +6,9 @@
   function recipeById(id){return Object.values(window.RECIPES||{}).flat().find(r=>r.id===id)||window.RecipeModel?.get(id)||null}
   function nutritionCardLocal(name,n){return `<div class="nutrition-card"><strong>${name}</strong><span>${Math.round(n.kcal)} ккал</span><span>Б ${r1(n.p)} г</span><span>Ж ${r1(n.f)} г</span><span>У ${r1(n.c)} г</span></div>`}
   function rows(items){return (items||[]).map(i=>`<li><span>${i.name}</span><strong>${fmt(i.amount,i.unit)}</strong></li>`).join('')}
-  function combined(iv,wi){
-    const map=new Map();[...(iv||[]),...(wi||[])].forEach(i=>{const k=i.productId||`${i.name}|${i.unit}`;const x=map.get(k)||{name:i.name,unit:i.unit,amount:0};x.amount+=Number(i.amount)||0;map.set(k,x)});return rows([...map.values()])
-  }
+  function combined(iv,wi){const map=new Map();[...(iv||[]),...(wi||[])].forEach(i=>{const k=i.productId||`${i.name}|${i.unit}`;const x=map.get(k)||{name:i.name,unit:i.unit,amount:0};x.amount+=Number(i.amount)||0;map.set(k,x)});return rows([...map.values()])}
   window.openRecipe=function(id,key=null,type=null){
-    if(!key||!type||!window.state){legacyOpen(id,key,type);return}
+    if(!key||!type||typeof state==='undefined'){legacyOpen(id,key,type);return}
     const snap=MenuEngine.adaptiveSnapshotFor?.(state,key),personI=snap?.people?.ivan?.meals?.[type],personW=snap?.people?.wife?.meals?.[type];
     if(!personI||!personW||personI.recipeId!==id||personW.recipeId!==id){legacyOpen(id,key,type);return}
     const r=recipeById(id);if(!r){legacyOpen(id,key,type);return}
