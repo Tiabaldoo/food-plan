@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f7f7f5" />
   <title>Наше меню</title>
-  <link rel="stylesheet" href="css/style.css?v=4" />
+  <link rel="stylesheet" href="css/style.css?v=5" />
 </head>
 <body>
   <header class="topbar">
@@ -31,10 +31,18 @@
     </article>
   </div>
 
-  <script src="data/recipes.js?v=4"></script>
-  <script src="data/profiles.js?v=4"></script>
-  <script src="js/storage.js?v=4"></script>
-  <script src="js/menu.js?v=4"></script>
-  <script src="js/app.js?v=4"></script>
+  <div id="replaceModal" class="modal" aria-hidden="true">
+    <div class="modal-backdrop" data-close-replace></div>
+    <article class="modal-card replace-modal-card" role="dialog" aria-modal="true" aria-labelledby="replaceTitle">
+      <button class="modal-close" data-close-replace aria-label="Закрыть">×</button>
+      <div id="replaceContent"></div>
+    </article>
+  </div>
+
+  <script src="data/recipes.js?v=5"></script>
+  <script src="data/profiles.js?v=5"></script>
+  <script src="js/storage.js?v=5"></script>
+  <script src="js/menu.js?v=5"></script>
+  <script src="js/app.js?v=5"></script>
 </body>
 </html>
