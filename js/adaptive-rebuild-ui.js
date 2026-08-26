@@ -10,10 +10,14 @@
     const limits=h.details.length?`${h.details.length} приёма пищи упёрлись в допустимые границы порций.`:'Текущие блюда плохо подстраиваются под новую цель.';
     return{limits,who:who.join(' · ')};
   }
+  function htmlFor(key,w){return `<div><strong>Цель значительно изменилась</strong><p>${w.limits}${w.who?` ${w.who}.`:''} Можно оставить ближайшие нормальные порции или пересобрать блюда под эту цель.</p></div><button type="button" data-rebuild-day="${key}">Пересобрать меню</button>`}
   function inject(){
     document.querySelectorAll('.day-card[data-date]').forEach(card=>{
-      card.querySelector('.adaptive-rebuild-warning')?.remove();const key=card.dataset.date,w=warningFor(key);if(!w)return;
-      const box=document.createElement('div');box.className='adaptive-rebuild-warning';box.innerHTML=`<div><strong>Цель значительно изменилась</strong><p>${w.limits}${w.who?` ${w.who}.`:''} Можно оставить ближайшие нормальные порции или пересобрать блюда под эту цель.</p></div><button type="button" data-rebuild-day="${key}">Пересобрать меню</button>`;
+      const key=card.dataset.date,w=warningFor(key),existing=card.querySelector('.adaptive-rebuild-warning');
+      if(!w){if(existing)existing.remove();return}
+      const nextHtml=htmlFor(key,w);
+      if(existing){if(existing.innerHTML!==nextHtml)existing.innerHTML=nextHtml;return}
+      const box=document.createElement('div');box.className='adaptive-rebuild-warning';box.innerHTML=nextHtml;
       const calories=card.querySelector('.day-calories');(calories||card.firstElementChild)?.insertAdjacentElement('afterend',box);
     });
   }
@@ -22,6 +26,10 @@
     if(typeof window.render==='function')window.render();if(typeof window.refreshFoodCalendar==='function')window.refreshFoodCalendar();
   }
   document.addEventListener('click',e=>{const b=e.target.closest('[data-rebuild-day]');if(!b)return;e.preventDefault();if(confirm('Подобрать другие блюда и заново рассчитать порции для этого дня?'))rebuild(b.dataset.rebuildDay)});
-  const obs=new MutationObserver(()=>inject());function init(){inject();const root=document.getElementById('menuContainer');if(root)obs.observe(root,{childList:true,subtree:true})}document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+  let scheduled=false;
+  function scheduleInject(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;inject()})}
+  const obs=new MutationObserver(scheduleInject);
+  function init(){inject();const root=document.getElementById('menuContainer');if(root)obs.observe(root,{childList:true,subtree:true})}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
   window.refreshAdaptiveRebuildWarnings=inject;
 })();
