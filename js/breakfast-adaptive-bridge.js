@@ -1,0 +1,7 @@
+(()=>{
+if(!window.RecipeModel||!window.BREAKFAST_ADAPTIVE||!window.ProductModel)return;
+const originalAll=RecipeModel.all.bind(RecipeModel),originalGet=RecipeModel.get.bind(RecipeModel);
+function enrich(r){const spec=r&&BREAKFAST_ADAPTIVE[r.id];if(!spec)return r;const ingredients=spec.ingredients.map(i=>{const p=ProductModel.get(i.productId);return{...i,nutrition:{...(p?.nutrition||{})},nutritionBasis:p?.nutritionBasis||'100'}});return{...r,adaptive:{enabled:true,basePerson:'ivan',ingredients},productIds:ingredients.map(i=>i.productId)}}
+RecipeModel.all=function(opts){return originalAll(opts).map(enrich)};
+RecipeModel.get=function(id){return enrich(originalGet(id))};
+})();
