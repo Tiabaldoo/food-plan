@@ -35,9 +35,10 @@ window.MenuEngine=(()=>{
     if(value&&typeof value==='object')return{ivan:Boolean(value.ivan),wife:Boolean(value.wife)};
     return emptyEaten();
   }
+  function currentTargets(){return{ivan:Number(PROFILES.ivan.target)||1900,wife:Number(PROFILES.wife.target)||1550}}
   function dayDefaults(key){
     const di=weekdayIndex(key);
-    const day={alcohol:false,alcoholPlan:{type:'unknown',ivan:1,wife:1},alcoholEaten:{ivan:false,wife:false},eaten:{},manualFood:[]};
+    const day={targets:currentTargets(),alcohol:false,alcoholPlan:{type:'unknown',ivan:1,wife:1},alcoholEaten:{ivan:false,wife:false},eaten:{},manualFood:[]};
     slots.forEach(([type])=>{day[type]=di%RECIPES[type].length;day.eaten[type]=emptyEaten()});
     return day;
   }
@@ -46,7 +47,8 @@ window.MenuEngine=(()=>{
     saved=saved||{};
     const eaten={};
     slots.forEach(([type])=>eaten[type]=normalizeEatenValue(saved.eaten&&saved.eaten[type]));
-    return {...base,...saved,alcoholPlan:{...base.alcoholPlan,...(saved.alcoholPlan||{})},alcoholEaten:normalizeEatenValue(saved.alcoholEaten),manualFood:Array.isArray(saved.manualFood)?saved.manualFood:[],eaten};
+    const targets={...base.targets,...(saved.targets||{})};
+    return {...base,...saved,targets,alcoholPlan:{...base.alcoholPlan,...(saved.alcoholPlan||{})},alcoholEaten:normalizeEatenValue(saved.alcoholEaten),manualFood:Array.isArray(saved.manualFood)?saved.manualFood:[],eaten};
   }
   function defaultHistory(){return{breakfast:[],snack:[],lunch:[],dinner:[]}}
   function defaultState(){return{view:'today',daysByDate:{},favorites:{},excluded:{},history:defaultHistory()}}
@@ -65,6 +67,10 @@ window.MenuEngine=(()=>{
   }
   function ensureDay(state,key){if(!state.daysByDate[key])state.daysByDate[key]=dayDefaults(key);return state.daysByDate[key]}
   function getDay(state,key){return ensureDay(state,key)}
+  function targetFor(state,key,person){
+    const d=ensureDay(state,key);const value=Number(d.targets&&d.targets[person]);
+    return Number.isFinite(value)&&value>0?value:Number(PROFILES[person]?.target)||0;
+  }
   function rememberRecipe(state,type,recipeId){
     if(!state.history)state.history=defaultHistory();
     if(!Array.isArray(state.history[type]))state.history[type]=[];
@@ -128,7 +134,7 @@ window.MenuEngine=(()=>{
   function alcoholScales(state,key){
     const d=ensureDay(state,key);if(!d.alcohol)return{ivan:1,wife:1};
     const alcohol=alcoholInfo(state,key);const meals=rawMeals(state,key);const raw=meals.reduce((a,m)=>({ivan:a.ivan+m.recipe.kcal.ivan,wife:a.wife+m.recipe.kcal.wife}),{ivan:0,wife:0});
-    const minFood={ivan:1100,wife:950};const target={ivan:PROFILES.ivan.target,wife:PROFILES.wife.target};
+    const minFood={ivan:1100,wife:950};const target={ivan:targetFor(state,key,'ivan'),wife:targetFor(state,key,'wife')};
     const budget={ivan:Math.max(minFood.ivan,target.ivan-alcohol.kcal.ivan),wife:Math.max(minFood.wife,target.wife-alcohol.kcal.wife)};
     return{ivan:Math.min(1,budget.ivan/raw.ivan),wife:Math.min(1,budget.wife/raw.wife)};
   }
@@ -141,5 +147,5 @@ window.MenuEngine=(()=>{
   function totals(state,key){return mealsFor(state,key).reduce((a,m)=>({ivan:a.ivan+m.kcal.ivan,wife:a.wife+m.kcal.wife}),{ivan:0,wife:0})}
   function eatenTotals(state,key){return mealsFor(state,key).reduce((a,m)=>({ivan:a.ivan+(m.eaten&&m.eaten.ivan?m.kcal.ivan:0),wife:a.wife+(m.eaten&&m.eaten.wife?m.kcal.wife:0)}),{ivan:0,wife:0})}
 
-  return{days,slots,ALCOHOL,normalize,ensureDay,getDay,localDateKey,weekDateKeys,dayLabel,formatDate,setRecipe,replacementOptions,randomReplace,toggleEaten,isEaten,eatenStatus,toggleFavorite,isFavorite,toggleExcluded,isExcluded,setAlcoholPlan,toggleAlcoholEaten,disableAlcohol,alcoholInfo,alcoholHistory,alcoholScales,resetDay,mealsFor,totals,eatenTotals,recentRecipeIds};
+  return{days,slots,ALCOHOL,normalize,ensureDay,getDay,targetFor,localDateKey,weekDateKeys,dayLabel,formatDate,setRecipe,replacementOptions,randomReplace,toggleEaten,isEaten,eatenStatus,toggleFavorite,isFavorite,toggleExcluded,isExcluded,setAlcoholPlan,toggleAlcoholEaten,disableAlcohol,alcoholInfo,alcoholHistory,alcoholScales,resetDay,mealsFor,totals,eatenTotals,recentRecipeIds};
 })();
