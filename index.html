@@ -5,16 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f7f7f5" />
   <title>Наше меню</title>
-  <link rel="stylesheet" href="css/style.css?v=30" />
-  <link rel="stylesheet" href="css/eaten.css?v=30" />
-  <link rel="stylesheet" href="css/date-history.css?v=30" />
-  <link rel="stylesheet" href="css/manual-food.css?v=30" />
-  <link rel="stylesheet" href="css/navigation.css?v=30" />
-  <link rel="stylesheet" href="css/calendar.css?v=30" />
-  <link rel="stylesheet" href="css/profile.css?v=30" />
-  <link rel="stylesheet" href="css/profile-mobile-fix.css?v=30" />
-  <link rel="stylesheet" href="css/day-target.css?v=30" />
-  <link rel="stylesheet" href="css/recipes-library.css?v=30" />
+  <link rel="stylesheet" href="css/style.css?v=31" />
+  <link rel="stylesheet" href="css/eaten.css?v=31" />
+  <link rel="stylesheet" href="css/date-history.css?v=31" />
+  <link rel="stylesheet" href="css/manual-food.css?v=31" />
+  <link rel="stylesheet" href="css/navigation.css?v=31" />
+  <link rel="stylesheet" href="css/calendar.css?v=31" />
+  <link rel="stylesheet" href="css/profile.css?v=31" />
+  <link rel="stylesheet" href="css/profile-mobile-fix.css?v=31" />
+  <link rel="stylesheet" href="css/day-target.css?v=31" />
+  <link rel="stylesheet" href="css/recipes-library.css?v=31" />
+  <link rel="stylesheet" href="css/products-library.css?v=31" />
 </head>
 <body>
   <header class="topbar">
@@ -47,7 +48,12 @@
     </section>
 
     <section class="section-view recipes-section" data-section-view="recipes" hidden>
+      <div class="dishes-subnav" data-dishes-subnav>
+        <button type="button" class="active" data-dishes-view="recipes">Рецепты</button>
+        <button type="button" data-dishes-view="products">Продукты</button>
+      </div>
       <div id="recipesRoot"></div>
+      <div id="productsRoot" hidden></div>
     </section>
 
     <section class="section-view placeholder-section" data-section-view="shopping" hidden>
@@ -99,18 +105,23 @@
     </article>
   </div>
 
-  <script src="data/recipes.js?v=30"></script>
-  <script src="js/recipe-model.js?v=30"></script>
-  <script src="data/profiles.js?v=30"></script>
-  <script src="js/storage.js?v=30"></script>
-  <script src="js/menu.js?v=30"></script>
-  <script src="js/app.js?v=30"></script>
-  <script src="js/manual-food.js?v=30"></script>
-  <script src="js/calendar.js?v=30"></script>
-  <script src="js/profile-target-sync.js?v=30"></script>
-  <script src="js/profile.js?v=30"></script>
-  <script src="js/day-target.js?v=30"></script>
-  <script src="js/recipes-library.js?v=30"></script>
-  <script src="js/navigation.js?v=30"></script>
+  <script src="data/recipes.js?v=31"></script>
+  <script src="js/product-model.js?v=31"></script>
+  <script src="js/recipe-model.js?v=31"></script>
+  <script src="js/recipe-product-links.js?v=31"></script>
+  <script src="data/profiles.js?v=31"></script>
+  <script src="js/storage.js?v=31"></script>
+  <script src="js/menu.js?v=31"></script>
+  <script src="js/app.js?v=31"></script>
+  <script src="js/manual-food.js?v=31"></script>
+  <script src="js/calendar.js?v=31"></script>
+  <script src="js/profile-target-sync.js?v=31"></script>
+  <script src="js/profile.js?v=31"></script>
+  <script src="js/day-target.js?v=31"></script>
+  <script src="js/recipes-library.js?v=31"></script>
+  <script src="js/products-library.js?v=31"></script>
+  <script src="js/dishes-subnav.js?v=31"></script>
+  <script src="js/recipe-ingredient-products.js?v=31"></script>
+  <script src="js/navigation.js?v=31"></script>
 </body>
 </html>
