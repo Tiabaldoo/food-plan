@@ -68,6 +68,7 @@
     const calc=(which)=>totalNutrition(recipe.adaptive.ingredients.map(i=>({...i,amount:Number(i[which]??i.amount)}))).kcal;
     return{min:Math.round(calc('min')),base:Math.round(totalNutrition(recipe.adaptive.ingredients).kcal),max:Math.round(calc('max'))};
   }
+  function hasValue(v){return String(v??'').trim()!==''&&Number.isFinite(Number(v))}
   function validateDraft(d){
     const errors=[];
     if(!String(d.name||'').trim())errors.push('Укажи название блюда.');
@@ -76,11 +77,11 @@
     (d.ingredients||[]).forEach((i,index)=>{
       const p=`Ингредиент ${index+1}`;
       if(!String(i.name||'').trim())errors.push(`${p}: нет названия.`);
-      if(!(Number(i.amount)>0))errors.push(`${p}: укажи количество.`);
-      if(!(Number(i.nutrition?.kcal)>=0))errors.push(`${p}: укажи калорийность.`);
-      if(!(Number(i.nutrition?.p)>=0&&Number(i.nutrition?.f)>=0&&Number(i.nutrition?.c)>=0))errors.push(`${p}: заполни БЖУ.`);
+      if(!hasValue(i.amount)||Number(i.amount)<=0)errors.push(`${p}: укажи количество.`);
+      if(!hasValue(i.nutrition?.kcal)||Number(i.nutrition.kcal)<0)errors.push(`${p}: укажи калорийность.`);
+      if(!hasValue(i.nutrition?.p)||!hasValue(i.nutrition?.f)||!hasValue(i.nutrition?.c)||Number(i.nutrition.p)<0||Number(i.nutrition.f)<0||Number(i.nutrition.c)<0)errors.push(`${p}: заполни БЖУ.`);
       if(!roleLabels[i.role])errors.push(`${p}: выбери роль.`);
-      if(!(Number(i.min)>=0)||!(Number(i.max)>0)||Number(i.min)>Number(i.amount)||Number(i.max)<Number(i.amount))errors.push(`${p}: min ≤ базового количества ≤ max.`);
+      if(!hasValue(i.min)||!hasValue(i.max)||Number(i.min)<0||Number(i.max)<=0||Number(i.min)>Number(i.amount)||Number(i.max)<Number(i.amount))errors.push(`${p}: min ≤ базового количества ≤ max.`);
     });
     if(!Array.isArray(d.steps)||!d.steps.some(x=>String(x).trim()))errors.push('Добавь хотя бы один шаг приготовления.');
     return errors;
