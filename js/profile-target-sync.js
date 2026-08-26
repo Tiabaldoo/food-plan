@@ -11,6 +11,7 @@
   function syncTargets(){
     const today=MenuEngine.localDateKey(new Date());
     Object.entries(state.daysByDate||{}).forEach(([key,day])=>{
+      if(day?.targetOverride)return;
       if(key>today||(key===today&&!hasRecordedData(day))){
         day.targets={ivan:Number(PROFILES.ivan.target)||1900,wife:Number(PROFILES.wife.target)||1550};
       }
