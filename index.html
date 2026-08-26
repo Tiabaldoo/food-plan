@@ -5,26 +5,62 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f7f7f5" />
   <title>Наше меню</title>
-  <link rel="stylesheet" href="css/style.css?v=15" />
-  <link rel="stylesheet" href="css/eaten.css?v=15" />
-  <link rel="stylesheet" href="css/date-history.css?v=15" />
-  <link rel="stylesheet" href="css/manual-food.css?v=15" />
+  <link rel="stylesheet" href="css/style.css?v=16" />
+  <link rel="stylesheet" href="css/eaten.css?v=16" />
+  <link rel="stylesheet" href="css/date-history.css?v=16" />
+  <link rel="stylesheet" href="css/manual-food.css?v=16" />
+  <link rel="stylesheet" href="css/navigation.css?v=16" />
 </head>
 <body>
   <header class="topbar">
-    <div>
+    <div class="topbar-brand">
       <p class="eyebrow">План питания</p>
-      <h1>Наше меню</h1>
+      <h1 id="pageTitle">Наше меню</h1>
     </div>
-    <div class="view-switch" role="group" aria-label="Режим просмотра">
+
+    <nav class="desktop-nav" aria-label="Основная навигация">
+      <button class="nav-btn active" data-section-target="menu"><span class="nav-icon">🍽</span><span>Меню</span></button>
+      <button class="nav-btn" data-section-target="calendar"><span class="nav-icon">📅</span><span>Календарь</span></button>
+      <button class="nav-btn" data-section-target="recipes"><span class="nav-icon">📖</span><span>Блюда</span></button>
+      <button class="nav-btn" data-section-target="shopping"><span class="nav-icon">🛒</span><span>Покупки</span></button>
+      <button class="nav-btn" data-section-target="profile"><span class="nav-icon">👥</span><span>Мы</span></button>
+    </nav>
+
+    <div class="view-switch" role="group" aria-label="Режим просмотра меню">
       <button class="view-btn active" data-view="today">Сегодня</button>
       <button class="view-btn" data-view="week">Неделя</button>
     </div>
   </header>
 
   <main class="page-shell">
-    <section id="menuContainer" class="menu-container" aria-live="polite"></section>
+    <section class="section-view" data-section-view="menu">
+      <section id="menuContainer" class="menu-container" aria-live="polite"></section>
+    </section>
+
+    <section class="section-view placeholder-section" data-section-view="calendar" hidden>
+      <div class="placeholder-card"><span class="placeholder-badge">Следующий этап</span><h2>Календарь</h2><p>Здесь появится месячный календарь с историей питания, алкогольными днями и статусами соблюдения плана.</p></div>
+    </section>
+
+    <section class="section-view placeholder-section" data-section-view="recipes" hidden>
+      <div class="placeholder-card"><span class="placeholder-badge">В разработке</span><h2>Блюда</h2><p>Здесь будет библиотека завтраков, обедов, ужинов, перекусов и любимых рецептов.</p></div>
+    </section>
+
+    <section class="section-view placeholder-section" data-section-view="shopping" hidden>
+      <div class="placeholder-card"><span class="placeholder-badge">В разработке</span><h2>Покупки</h2><p>Здесь появится общий список продуктов, автоматически рассчитанный по выбранному меню на двоих.</p></div>
+    </section>
+
+    <section class="section-view placeholder-section" data-section-view="profile" hidden>
+      <div class="placeholder-card"><span class="placeholder-badge">В разработке</span><h2>Мы</h2><p>Здесь будут ваши параметры, цели, калорийность и настройки питания Ивана и Насти.</p></div>
+    </section>
   </main>
+
+  <nav class="mobile-nav" aria-label="Основная навигация">
+    <button class="nav-btn active" data-section-target="menu"><span class="nav-icon">🍽</span><span>Меню</span></button>
+    <button class="nav-btn" data-section-target="calendar"><span class="nav-icon">📅</span><span>Календарь</span></button>
+    <button class="nav-btn" data-section-target="recipes"><span class="nav-icon">📖</span><span>Блюда</span></button>
+    <button class="nav-btn" data-section-target="shopping"><span class="nav-icon">🛒</span><span>Покупки</span></button>
+    <button class="nav-btn" data-section-target="profile"><span class="nav-icon">👥</span><span>Мы</span></button>
+  </nav>
 
   <div id="recipeModal" class="modal" aria-hidden="true">
     <div class="modal-backdrop" data-close-modal></div>
@@ -58,11 +94,12 @@
     </article>
   </div>
 
-  <script src="data/recipes.js?v=15"></script>
-  <script src="data/profiles.js?v=15"></script>
-  <script src="js/storage.js?v=15"></script>
-  <script src="js/menu.js?v=15"></script>
-  <script src="js/app.js?v=15"></script>
-  <script src="js/manual-food.js?v=15"></script>
+  <script src="data/recipes.js?v=16"></script>
+  <script src="data/profiles.js?v=16"></script>
+  <script src="js/storage.js?v=16"></script>
+  <script src="js/menu.js?v=16"></script>
+  <script src="js/app.js?v=16"></script>
+  <script src="js/manual-food.js?v=16"></script>
+  <script src="js/navigation.js?v=16"></script>
 </body>
 </html>
