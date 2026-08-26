@@ -2,8 +2,8 @@
   const STORAGE_KEY='foodPlanProfilesV1';
   const defaults={
     shared:{lossPercent:15,gainPercent:10},
-    ivan:{name:'Иван',sex:'male',age:31,height:180,weight:102,targetWeight:85,activity:'sedentary',goal:'loss',calorieMode:'manual',manualTarget:1900,target:1900,body:{fat:null,muscle:null,water:null,visceral:null,scaleBmr:null}},
-    wife:{name:'Настя',sex:'female',age:31,height:172,weight:72,targetWeight:60,activity:'sedentary',goal:'loss',calorieMode:'manual',manualTarget:1550,target:1550,body:{fat:null,muscle:null,water:null,visceral:null,scaleBmr:null}}
+    ivan:{name:'Иван',sex:'male',age:31,height:180,weight:102,targetWeight:null,activity:'sedentary',goal:'loss',calorieMode:'manual',manualTarget:1900,target:1900,body:{fat:null,muscle:null,water:null,visceral:null,scaleBmr:null}},
+    wife:{name:'Настя',sex:'female',age:31,height:172,weight:72,targetWeight:null,activity:'sedentary',goal:'loss',calorieMode:'manual',manualTarget:1550,target:1550,body:{fat:null,muscle:null,water:null,visceral:null,scaleBmr:null}}
   };
   const activities={
     sedentary:{label:'Минимальная',description:'В основном сидячий день, тренировок мало',factor:1.2},
