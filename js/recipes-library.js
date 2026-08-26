@@ -1,0 +1,116 @@
+(()=>{
+  const root=document.getElementById('recipesRoot');
+  if(!root||!window.RecipeModel||typeof state==='undefined')return;
+  let category='all',query='',source='all';
+  const categoryOrder=['all','breakfast','lunch','dinner','snack','favorites'];
+  const categoryNames={all:'Все',breakfast:'Завтраки',lunch:'Обеды',dinner:'Ужины',snack:'Перекусы',favorites:'Любимые'};
+  let editor=null;
+
+  const editorModal=document.createElement('div');
+  editorModal.className='modal recipe-editor-modal';editorModal.id='recipeEditorModal';editorModal.setAttribute('aria-hidden','true');
+  editorModal.innerHTML='<div class="modal-backdrop" data-close-recipe-editor></div><article class="modal-card recipe-editor-card" role="dialog" aria-modal="true"><button class="modal-close" data-close-recipe-editor aria-label="Закрыть">×</button><div id="recipeEditorContent"></div></article>';
+  document.body.appendChild(editorModal);
+  const editorContent=editorModal.querySelector('#recipeEditorContent');
+
+  function esc(v){return String(v??'').replace(/[&<>'"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]))}
+  function allVisible(){return RecipeModel.all().filter(r=>{
+    if(category==='favorites'&&!MenuEngine.isFavorite(state,r.id))return false;
+    if(!['all','favorites'].includes(category)&&r.category!==category)return false;
+    if(source==='builtIn'&&r.source!=='builtIn')return false;
+    if(source==='custom'&&r.source!=='custom')return false;
+    if(query&&!r.name.toLowerCase().includes(query.toLowerCase()))return false;
+    return true;
+  })}
+  function nutrition(r){
+    if(r.source==='custom')return r.baseNutrition||RecipeModel.totalNutrition(r.ingredients||[]);
+    const k=r.kcal?.ivan||0,m=r.macros?.ivan||{};return{kcal:k,p:m.p||0,f:m.f||0,c:m.c||0};
+  }
+  function rangeText(r){const x=RecipeModel.adaptiveRange(r);return x?`${x.min}–${x.max} ккал`:'будет подготовлено при наполнении базы'}
+  function card(r){
+    const n=nutrition(r),fav=MenuEngine.isFavorite(state,r.id),excluded=MenuEngine.isExcluded(state,r.id),adaptive=Boolean(r.adaptive?.enabled);
+    return `<article class="library-recipe-card ${excluded?'is-excluded':''}" data-library-card="${r.id}">
+      <div class="library-card-top"><div class="library-badges"><span>${RecipeModel.categoryLabels[r.category]}</span>${r.source==='custom'?'<span class="mine">Моё</span>':''}${adaptive?'<span class="adaptive">Адаптивное</span>':'<span>Обычное</span>'}</div><div class="library-card-icons"><button type="button" class="favorite-btn ${fav?'active':''}" data-lib-favorite="${r.id}" aria-label="Любимое">${fav?'♥':'♡'}</button><button type="button" class="exclude-heart-btn ${excluded?'active':''}" data-lib-excluded="${r.id}" aria-label="Не предлагать"><span>♡</span></button></div></div>
+      <button type="button" class="library-card-main" data-open-library-recipe="${r.id}"><h3>${esc(r.name)}</h3><div class="library-nutrition"><strong>${Math.round(n.kcal)} ккал</strong><span>Б ${n.p} · Ж ${n.f} · У ${n.c}</span></div><div class="library-meta"><span>⏱ ${esc(r.time||'—')}</span><span>🍳 ${esc(r.method||'—')}</span></div><div class="adaptive-range"><span>${adaptive?'Диапазон адаптации':'Структура'}</span><strong>${rangeText(r)}</strong></div></button>
+      <div class="library-card-actions"><button type="button" class="action-btn primary" data-open-library-recipe="${r.id}">Рецепт</button>${r.source==='custom'?`<button type="button" class="action-btn" data-edit-custom="${r.id}">Редактировать</button><button type="button" class="library-more" data-custom-menu="${r.id}" aria-label="Ещё">⋯</button>`:''}</div>
+    </article>`;
+  }
+  function render(){
+    const items=allVisible();
+    root.innerHTML=`<div class="recipes-library-head"><div><p class="eyebrow">Библиотека</p><h2>Все блюда</h2><p>Открывай рецепт независимо от меню, отмечай любимое или исключай из предложений.</p></div><button type="button" class="add-recipe-btn" data-add-recipe>+ Добавить блюдо</button></div>
+      <div class="recipe-library-tools"><div class="recipe-search"><span>⌕</span><input type="search" value="${esc(query)}" placeholder="Поиск по названию" data-recipe-search></div><select data-recipe-source><option value="all" ${source==='all'?'selected':''}>Все источники</option><option value="builtIn" ${source==='builtIn'?'selected':''}>Встроенные</option><option value="custom" ${source==='custom'?'selected':''}>Мои блюда</option></select></div>
+      <div class="recipe-category-tabs">${categoryOrder.map(k=>`<button type="button" class="recipe-category-tab ${category===k?'active':''}" data-recipe-category="${k}">${categoryNames[k]}${k==='favorites'?` <small>${RecipeModel.all().filter(r=>MenuEngine.isFavorite(state,r.id)).length}</small>`:''}</button>`).join('')}</div>
+      <div class="recipe-library-summary">Найдено: <strong>${items.length}</strong> · Адаптивных: <strong>${items.filter(r=>r.adaptive?.enabled).length}</strong> · Своих: <strong>${items.filter(r=>r.source==='custom').length}</strong></div>
+      ${items.length?`<div class="recipe-library-grid">${items.map(card).join('')}</div>`:'<div class="recipe-library-empty"><strong>Ничего не найдено</strong><span>Измени категорию или поисковый запрос.</span></div>'}`;
+    bind();
+  }
+  function bind(){
+    root.querySelector('[data-add-recipe]')?.addEventListener('click',()=>openEditor());
+    root.querySelector('[data-recipe-search]')?.addEventListener('input',e=>{query=e.target.value;render()});
+    root.querySelector('[data-recipe-source]')?.addEventListener('change',e=>{source=e.target.value;render()});
+    root.querySelectorAll('[data-recipe-category]').forEach(b=>b.onclick=()=>{category=b.dataset.recipeCategory;render()});
+    root.querySelectorAll('[data-lib-favorite]').forEach(b=>b.onclick=e=>{e.stopPropagation();MenuEngine.toggleFavorite(state,b.dataset.libFavorite);render();if(typeof window.render==='function')window.render()});
+    root.querySelectorAll('[data-lib-excluded]').forEach(b=>b.onclick=e=>{e.stopPropagation();MenuEngine.toggleExcluded(state,b.dataset.libExcluded);render();if(typeof window.render==='function')window.render()});
+    root.querySelectorAll('[data-open-library-recipe]').forEach(b=>b.onclick=()=>openLibraryRecipe(b.dataset.openLibraryRecipe));
+    root.querySelectorAll('[data-edit-custom]').forEach(b=>b.onclick=()=>openEditor(b.dataset.editCustom));
+    root.querySelectorAll('[data-custom-menu]').forEach(b=>b.onclick=()=>openCustomMenu(b.dataset.customMenu,b));
+  }
+
+  function openLibraryRecipe(id){
+    const r=RecipeModel.get(id);if(!r)return;
+    if(r.source==='builtIn'&&typeof openRecipe==='function'){openRecipe(r.id);return}
+    const modal=document.getElementById('recipeModal'),content=document.getElementById('recipeContent'),n=nutrition(r),range=RecipeModel.adaptiveRange(r);
+    content.innerHTML=`<p class="eyebrow">Мой рецепт · ${RecipeModel.categoryLabels[r.category]}</p><div class="recipe-heading"><h2 id="recipeTitle">${esc(r.name)}</h2></div><div class="recipe-facts"><span>⏱ ${esc(r.time)}</span><span>🍳 ${esc(r.method)}</span><span>⚙️ адаптивный рецепт</span></div><section class="recipe-section"><h3>Базовая порция</h3><div class="nutrition-grid custom-nutrition"><div class="nutrition-card"><strong>${Math.round(n.kcal)} ккал</strong><span>Белки ${n.p} г</span><span>Жиры ${n.f} г</span><span>Углеводы ${n.c} г</span></div>${range?`<div class="nutrition-card"><strong>Диапазон ${range.min}–${range.max} ккал</strong><span>База ${range.base} ккал</span><span>Зависит от min/max ингредиентов</span></div>`:''}</div></section><section class="recipe-section"><h3>Ингредиенты</h3><div class="adaptive-ingredient-view">${r.ingredients.map(i=>`<div><strong>${esc(i.name)}</strong><span>${i.amount} ${i.unit} · ${RecipeModel.roleLabels[i.role]}</span><small>можно ${i.min}–${i.max} ${i.unit}</small></div>`).join('')}</div></section><section class="recipe-section"><h3>Как приготовить</h3><ol class="recipe-steps">${r.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></section>`;
+    modal.classList.add('open');modal.setAttribute('aria-hidden','false');
+  }
+
+  function openCustomMenu(id,anchor){
+    document.querySelector('.custom-recipe-menu')?.remove();
+    const menu=document.createElement('div');menu.className='custom-recipe-menu';menu.innerHTML=`<button data-duplicate-custom="${id}">Создать копию</button><button class="danger" data-archive-custom="${id}">Удалить из библиотеки</button>`;
+    anchor.parentElement.appendChild(menu);
+    menu.querySelector('[data-duplicate-custom]').onclick=()=>{RecipeModel.duplicate(id);menu.remove();render()};
+    menu.querySelector('[data-archive-custom]').onclick=()=>{if(confirm('Убрать это блюдо из библиотеки? Оно сохранится в архиве, чтобы не ломать старые данные.')){RecipeModel.archive(id);menu.remove();render()}};
+    setTimeout(()=>document.addEventListener('click',function outside(e){if(!menu.contains(e.target)&&e.target!==anchor){menu.remove();document.removeEventListener('click',outside)}}, {once:false}),0);
+  }
+
+  function blankIngredient(){return{name:'',amount:'',unit:'г',nutrition:{kcal:'',p:'',f:'',c:''},role:'carb',min:'',max:''}}
+  function blankDraft(){return{name:'',category:'breakfast',time:'',method:'',ingredients:[blankIngredient()],steps:['']}}
+  function draftFromRecipe(r){return{name:r.name,category:r.category,time:r.time==='—'?'':r.time,method:r.method==='—'?'':r.method,ingredients:(r.ingredients||[]).map(i=>({...i,nutrition:{...(i.nutrition||{})}})),steps:[...(r.steps||[])]}}
+  function openEditor(id=null){const r=id?RecipeModel.get(id):null;editor={id,step:1,draft:r?draftFromRecipe(r):blankDraft(),errors:[]};renderEditor();editorModal.classList.add('open');editorModal.setAttribute('aria-hidden','false')}
+  function closeEditor(){editorModal.classList.remove('open');editorModal.setAttribute('aria-hidden','true');editor=null}
+  function syncEditorFields(){
+    if(!editor)return;const d=editor.draft;
+    editorContent.querySelectorAll('[data-draft-field]').forEach(el=>{const k=el.dataset.draftField;d[k]=el.value});
+    editorContent.querySelectorAll('[data-ing]').forEach(el=>{const [idx,path]=el.dataset.ing.split('|'),i=d.ingredients[Number(idx)];if(!i)return;if(path.startsWith('nutrition.'))i.nutrition[path.split('.')[1]]=el.value;else i[path]=el.value});
+    editorContent.querySelectorAll('[data-step-index]').forEach(el=>d.steps[Number(el.dataset.stepIndex)]=el.value);
+  }
+  function editorProgress(){return `<div class="recipe-editor-progress">${[1,2,3,4].map((n,i)=>`<span class="${editor.step===n?'active':editor.step>n?'done':''}"><i>${editor.step>n?'✓':n}</i><b>${['Блюдо','Ингредиенты','Приготовление','Проверка'][i]}</b></span>`).join('')}</div>`}
+  function editorStep(){const d=editor.draft;
+    if(editor.step===1)return `<div class="editor-fields"><label><span>Название *</span><input value="${esc(d.name)}" data-draft-field="name" placeholder="Например: паста с курицей"></label><label><span>Категория *</span><select data-draft-field="category">${Object.entries(RecipeModel.categoryLabels).map(([k,v])=>`<option value="${k}" ${d.category===k?'selected':''}>${v}</option>`).join('')}</select></label><label><span>Время приготовления</span><input value="${esc(d.time)}" data-draft-field="time" placeholder="25 мин"></label><label><span>Способ приготовления</span><input value="${esc(d.method)}" data-draft-field="method" placeholder="Сковорода / аэрогриль"></label></div>`;
+    if(editor.step===2)return `<div class="editor-note">КБЖУ вводится на 100 г/мл, а для единицы «шт» — на 1 штуку. Итог блюда сайт считает автоматически.</div><div class="editor-ingredients">${d.ingredients.map((i,idx)=>ingredientEditor(i,idx)).join('')}</div><button type="button" class="editor-add-row" data-add-ingredient>+ Добавить ингредиент</button><div class="editor-live-total">${totalDraftMarkup()}</div>`;
+    if(editor.step===3)return `<div class="editor-note">Добавь последовательные шаги приготовления. Пустые шаги при сохранении будут удалены.</div><div class="editor-steps">${d.steps.map((x,idx)=>`<div><span>${idx+1}</span><textarea rows="2" data-step-index="${idx}" placeholder="Опиши шаг">${esc(x)}</textarea>${d.steps.length>1?`<button type="button" data-remove-step="${idx}">×</button>`:''}</div>`).join('')}</div><button type="button" class="editor-add-row" data-add-step>+ Добавить шаг</button>`;
+    const errors=RecipeModel.validateDraft(d),n=RecipeModel.totalNutrition(normalizeIngredientsForCalc(d.ingredients)),range=rangeFromDraft(d);
+    return `<div class="editor-review"><div class="editor-review-title"><span>${RecipeModel.categoryLabels[d.category]||'—'}</span><h3>${esc(d.name||'Без названия')}</h3></div><div class="editor-review-nutrition"><strong>${Math.round(n.kcal)} ккал</strong><span>Б ${n.p} · Ж ${n.f} · У ${n.c}</span>${range?`<small>Ожидаемый диапазон: ${range.min}–${range.max} ккал</small>`:''}</div><div class="editor-readiness ${errors.length?'bad':'good'}"><strong>${errors.length?'Нужно заполнить ещё несколько полей':'✓ Рецепт готов к адаптивному меню'}</strong>${errors.length?`<ul>${errors.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<span>Есть состав, КБЖУ, роли ингредиентов, min/max и инструкция.</span>'}</div></div>`;
+  }
+  function normalizeIngredientsForCalc(items){return items.map(i=>({...i,amount:Number(i.amount)||0,nutrition:{kcal:Number(i.nutrition?.kcal)||0,p:Number(i.nutrition?.p)||0,f:Number(i.nutrition?.f)||0,c:Number(i.nutrition?.c)||0},nutritionBasis:i.unit==='шт'?'unit':'100'}))}
+  function rangeFromDraft(d){const items=normalizeIngredientsForCalc(d.ingredients);if(!items.length)return null;const calc=which=>RecipeModel.totalNutrition(items.map(i=>({...i,amount:Number(i[which])||0}))).kcal;return{min:Math.round(calc('min')),max:Math.round(calc('max'))}}
+  function totalDraftMarkup(){const n=RecipeModel.totalNutrition(normalizeIngredientsForCalc(editor.draft.ingredients));return `<span>Базовая порция</span><strong>${Math.round(n.kcal)} ккал</strong><small>Б ${n.p} · Ж ${n.f} · У ${n.c}</small>`}
+  function ingredientEditor(i,idx){const basis=i.unit==='шт'?'на 1 шт':'на 100 г/мл';return `<article class="editor-ingredient"><div class="editor-ingredient-head"><strong>Ингредиент ${idx+1}</strong>${editor.draft.ingredients.length>1?`<button type="button" data-remove-ingredient="${idx}">Удалить</button>`:''}</div><div class="ingredient-main-grid"><label><span>Название *</span><input value="${esc(i.name)}" data-ing="${idx}|name" placeholder="Рис сухой"></label><label><span>Количество *</span><input type="number" step="0.1" min="0" value="${i.amount}" data-ing="${idx}|amount"></label><label><span>Единица</span><select data-ing="${idx}|unit"><option value="г" ${i.unit==='г'?'selected':''}>г</option><option value="мл" ${i.unit==='мл'?'selected':''}>мл</option><option value="шт" ${i.unit==='шт'?'selected':''}>шт</option></select></label><label><span>Роль *</span><select data-ing="${idx}|role">${Object.entries(RecipeModel.roleLabels).map(([k,v])=>`<option value="${k}" ${i.role===k?'selected':''}>${v}</option>`).join('')}</select></label></div><div class="ingredient-nutrition"><span>КБЖУ ${basis}</span><label>ккал<input type="number" step="0.1" min="0" value="${i.nutrition?.kcal??''}" data-ing="${idx}|nutrition.kcal"></label><label>Б<input type="number" step="0.1" min="0" value="${i.nutrition?.p??''}" data-ing="${idx}|nutrition.p"></label><label>Ж<input type="number" step="0.1" min="0" value="${i.nutrition?.f??''}" data-ing="${idx}|nutrition.f"></label><label>У<input type="number" step="0.1" min="0" value="${i.nutrition?.c??''}" data-ing="${idx}|nutrition.c"></label></div><div class="ingredient-range"><span>Допустимое количество для адаптации</span><label>min<input type="number" step="0.1" min="0" value="${i.min}" data-ing="${idx}|min"></label><label>база<strong>${i.amount||'—'} ${i.unit}</strong></label><label>max<input type="number" step="0.1" min="0" value="${i.max}" data-ing="${idx}|max"></label></div></article>`}
+  function renderEditor(){
+    editorContent.innerHTML=`<p class="eyebrow">${editor.id?'Редактирование':'Новый рецепт'}</p><h2>${editor.id?'Изменить блюдо':'Добавить своё блюдо'}</h2>${editorProgress()}<div class="recipe-editor-body">${editorStep()}</div><div class="recipe-editor-actions"><button type="button" class="editor-secondary" data-editor-back ${editor.step===1?'disabled':''}>Назад</button>${editor.step<4?'<button type="button" class="editor-primary" data-editor-next>Далее</button>':'<button type="button" class="editor-primary" data-editor-save>Добавить в библиотеку</button>'}</div>`;
+    bindEditor();
+  }
+  function bindEditor(){
+    editorContent.querySelector('[data-editor-next]')?.addEventListener('click',()=>{syncEditorFields();editor.step++;renderEditor()});
+    editorContent.querySelector('[data-editor-back]')?.addEventListener('click',()=>{syncEditorFields();editor.step--;renderEditor()});
+    editorContent.querySelector('[data-add-ingredient]')?.addEventListener('click',()=>{syncEditorFields();editor.draft.ingredients.push(blankIngredient());renderEditor()});
+    editorContent.querySelectorAll('[data-remove-ingredient]').forEach(b=>b.onclick=()=>{syncEditorFields();editor.draft.ingredients.splice(Number(b.dataset.removeIngredient),1);renderEditor()});
+    editorContent.querySelector('[data-add-step]')?.addEventListener('click',()=>{syncEditorFields();editor.draft.steps.push('');renderEditor()});
+    editorContent.querySelectorAll('[data-remove-step]').forEach(b=>b.onclick=()=>{syncEditorFields();editor.draft.steps.splice(Number(b.dataset.removeStep),1);renderEditor()});
+    editorContent.querySelector('[data-editor-save]')?.addEventListener('click',()=>{syncEditorFields();const result=RecipeModel.saveCustom(editor.draft,editor.id);if(!result.ok){renderEditor();return}closeEditor();render()});
+    editorContent.querySelectorAll('[data-ing]').forEach(el=>el.addEventListener('change',()=>{syncEditorFields();if(editor.step===2)renderEditor()}));
+  }
+  document.addEventListener('click',e=>{if(e.target.closest('[data-close-recipe-editor]'))closeEditor()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&editorModal.classList.contains('open'))closeEditor()});
+  window.refreshRecipeLibrary=render;
+  render();
+})();
