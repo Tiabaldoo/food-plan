@@ -47,7 +47,12 @@
     modal.classList.add('open');modal.setAttribute('aria-hidden','false');
   }
   function close(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');activeKey=null}
-  function refresh(){if(typeof window.render==='function')window.render();if(typeof window.refreshFoodCalendar==='function')window.refreshFoodCalendar()}
+  function refresh(){
+    if(typeof window.render==='function')window.render();
+    if(typeof window.refreshFoodCalendar==='function')window.refreshFoodCalendar();
+    const updateWarnings=()=>{if(typeof window.refreshAdaptiveRebuildWarnings==='function')window.refreshAdaptiveRebuildWarnings()};
+    if(typeof requestAnimationFrame==='function')requestAnimationFrame(updateWarnings);else setTimeout(updateWarnings,0);
+  }
   function save(){if(!activeKey)return;const iv=Math.round(Number(document.getElementById('dayTargetIvan')?.value)),wi=Math.round(Number(document.getElementById('dayTargetWife')?.value));if(!Number.isFinite(iv)||!Number.isFinite(wi)||iv<900||wi<900)return;MenuEngine.setDayTargets(state,activeKey,{ivan:iv,wife:wi});close();refresh()}
 
   document.addEventListener('click',e=>{
