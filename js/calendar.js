@@ -7,7 +7,6 @@
   function keyFor(date){return MenuEngine.localDateKey(date)}
   function targetFor(person){return person==='ivan'?PROFILES.ivan.target:PROFILES.wife.target}
   function personName(person){return person==='ivan'?PROFILES.ivan.name:PROFILES.wife.name}
-  function personShort(person){return person==='ivan'?'И':'Н'}
   function manualKcal(day,person){return (Array.isArray(day.manualFood)?day.manualFood:[]).reduce((s,x)=>s+Math.max(0,Number(x.kcal?.[person])||0),0)}
   function hasAnyData(day,person){
     if(!day)return false;
@@ -18,12 +17,12 @@
   function allPlannedEaten(day,person){return MenuEngine.slots.every(([type])=>Boolean(day?.eaten?.[type]?.[person]))}
   function statusFor(key,person){
     const day=state.daysByDate?.[key];
-    if(!day||!hasAnyData(day,person))return{code:'none',label:'Нет данных',className:'status-none',kcal:0,alcohol:false};
+    if(!day||!hasAnyData(day,person))return{code:'none',label:'Нет данных',className:'status-none',kcal:0,alcohol:false,hasData:false};
     const totals=MenuEngine.eatenTotals(state,key);const kcal=totals[person];
     const alcohol=Boolean(day.alcohol&&day.alcoholEaten?.[person]);
-    if(kcal>targetFor(person))return{code:'over',label:'Выше плана',className:'status-over',kcal,alcohol};
-    if(allPlannedEaten(day,person))return{code:'good',label:'В плане',className:'status-good',kcal,alcohol};
-    return{code:'partial',label:'Неполный день',className:'status-partial',kcal,alcohol};
+    if(kcal>targetFor(person))return{code:'over',label:'Выше плана',className:'status-over',kcal,alcohol,hasData:true};
+    if(allPlannedEaten(day,person))return{code:'good',label:'В плане',className:'status-good',kcal,alcohol,hasData:true};
+    return{code:'partial',label:'Неполный день',className:'status-partial',kcal,alcohol,hasData:true};
   }
   function monthKeys(year,month){
     const out=[];const d=new Date(year,month,1);while(d.getMonth()===month){out.push(keyFor(d));d.setDate(d.getDate()+1)}return out;
@@ -35,9 +34,20 @@
     return stats;
   }
   function summaryMarkup(person){const s=summary(person);return `<div class="calendar-person-summary"><strong>${personName(person)}</strong><div class="calendar-summary-line">В плане: ${s.good} · Выше плана: ${s.over} · Неполных: ${s.partial} · 🍺 ${s.alcohol}</div></div>`}
+  function personStatusRow(person,status){
+    const short=person==='ivan'?'И':'Н';
+    return `<div class="calendar-person-row" data-person="${person}"><span class="status-dot ${status.className}"></span><span class="person-short">${short}</span><span class="status-label">${status.label}</span>${status.alcohol?'<span class="calendar-alcohol">🍺</span>':''}</div>`;
+  }
   function dayCell(date,inMonth){
     const key=keyFor(date);const iv=statusFor(key,'ivan'),wi=statusFor(key,'wife');const today=key===keyFor(new Date());
-    return `<div class="calendar-day ${inMonth?'':'outside'} ${today?'today':''}" data-calendar-date="${key}"><div class="calendar-date-number">${date.getDate()}</div><div class="calendar-person-row"><span class="status-dot ${iv.className}"></span><span class="person-short">И</span><span>${iv.label}</span>${iv.alcohol?'<span class="calendar-alcohol">🍺</span>':''}</div><div class="calendar-person-row"><span class="status-dot ${wi.className}"></span><span class="person-short">Н</span><span>${wi.label}</span>${wi.alcohol?'<span class="calendar-alcohol">🍺</span>':''}</div>${iv.code==='none'&&wi.code==='none'?'<div class="calendar-empty-note">Нет отметок</div>':''}</div>`;
+    let statuses='';
+    if(!iv.hasData&&!wi.hasData){
+      statuses='<div class="calendar-no-data"><span class="status-dot status-none"></span><span class="status-label">Нет данных</span></div>';
+    }else{
+      if(iv.hasData)statuses+=personStatusRow('ivan',iv);
+      if(wi.hasData)statuses+=personStatusRow('wife',wi);
+    }
+    return `<div class="calendar-day ${inMonth?'':'outside'} ${today?'today':''}" data-calendar-date="${key}"><div class="calendar-date-number">${date.getDate()}</div><div class="calendar-statuses">${statuses}</div></div>`;
   }
   function render(){
     const y=cursor.getFullYear(),m=cursor.getMonth();const first=new Date(y,m,1);const jsDay=first.getDay();const mondayIndex=jsDay===0?6:jsDay-1;const start=new Date(y,m,1-mondayIndex);
