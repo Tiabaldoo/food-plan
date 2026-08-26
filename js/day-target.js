@@ -1,6 +1,18 @@
 (()=>{
   if(!window.MenuEngine||typeof state==='undefined')return;
 
+  const originalSetDayTargets=MenuEngine.setDayTargets.bind(MenuEngine);
+  MenuEngine.setDayTargets=function(appState,key,targets){
+    originalSetDayTargets(appState,key,targets);
+    const day=MenuEngine.getDay(appState,key);day.targetOverride=true;Store.save(appState);
+  };
+  const originalResetDay=MenuEngine.resetDay.bind(MenuEngine);
+  MenuEngine.resetDay=function(appState,key){
+    const day=MenuEngine.getDay(appState,key);const override=Boolean(day.targetOverride);const targets={ivan:MenuEngine.targetFor(appState,key,'ivan'),wife:MenuEngine.targetFor(appState,key,'wife')};
+    originalResetDay(appState,key);
+    appState.daysByDate[key].targets=targets;appState.daysByDate[key].targetOverride=override;Store.save(appState);
+  };
+
   const modal=document.createElement('div');
   modal.id='dayTargetModal';
   modal.className='modal';
@@ -13,14 +25,15 @@
   const originalRenderDay=window.renderDay;
   if(typeof originalRenderDay==='function'){
     window.renderDay=function(key){
+      const selected=MenuEngine.getDay(state,key);
       const targetIvan=MenuEngine.targetFor(state,key,'ivan');
       const targetWife=MenuEngine.targetFor(state,key,'wife');
-      const customIvan=targetIvan!==Number(PROFILE_DATA?.ivan?.target||PROFILES.ivan.target);
-      const customWife=targetWife!==Number(PROFILE_DATA?.wife?.target||PROFILES.wife.target);
       let html=originalRenderDay(key);
       html=html.replace(`<button class="day-option danger" data-reset-day="${key}">`,`<button class="day-option" data-day-target="${key}">Изменить цель калорий</button><button class="day-option danger" data-reset-day="${key}">`);
-      if(customIvan)html=html.replace(`План: <strong>${targetIvan} ккал</strong>`,`План: <strong>${targetIvan} ккал</strong><em class="individual-target">индивидуально</em>`);
-      if(customWife)html=html.replace(`План: <strong>${targetWife} ккал</strong>`,`План: <strong>${targetWife} ккал</strong><em class="individual-target">индивидуально</em>`);
+      if(selected.targetOverride){
+        html=html.replace(`План: <strong>${targetIvan} ккал</strong>`,`План: <strong>${targetIvan} ккал</strong><em class="individual-target">индивидуально</em>`);
+        html=html.replace(`План: <strong>${targetWife} ккал</strong>`,`План: <strong>${targetWife} ккал</strong><em class="individual-target">индивидуально</em>`);
+      }
       return html;
     };
   }
