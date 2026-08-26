@@ -37,7 +37,7 @@ window.MenuEngine=(()=>{
   }
   function dayDefaults(key){
     const di=weekdayIndex(key);
-    const day={alcohol:false,alcoholPlan:{type:'unknown',ivan:1,wife:1},alcoholEaten:{ivan:false,wife:false},eaten:{}};
+    const day={alcohol:false,alcoholPlan:{type:'unknown',ivan:1,wife:1},alcoholEaten:{ivan:false,wife:false},eaten:{},manualFood:[]};
     slots.forEach(([type])=>{day[type]=di%RECIPES[type].length;day.eaten[type]=emptyEaten()});
     return day;
   }
@@ -46,7 +46,7 @@ window.MenuEngine=(()=>{
     saved=saved||{};
     const eaten={};
     slots.forEach(([type])=>eaten[type]=normalizeEatenValue(saved.eaten&&saved.eaten[type]));
-    return {...base,...saved,alcoholPlan:{...base.alcoholPlan,...(saved.alcoholPlan||{})},alcoholEaten:normalizeEatenValue(saved.alcoholEaten),eaten};
+    return {...base,...saved,alcoholPlan:{...base.alcoholPlan,...(saved.alcoholPlan||{})},alcoholEaten:normalizeEatenValue(saved.alcoholEaten),manualFood:Array.isArray(saved.manualFood)?saved.manualFood:[],eaten};
   }
   function defaultHistory(){return{breakfast:[],snack:[],lunch:[],dinner:[]}}
   function defaultState(){return{view:'today',daysByDate:{},favorites:{},excluded:{},history:defaultHistory()}}
@@ -102,6 +102,27 @@ window.MenuEngine=(()=>{
     const kcal=plan.type==='unknown'?{ivan:500,wife:350}:{ivan:Math.round(cfg.kcal*plan.ivan),wife:Math.round(cfg.kcal*plan.wife)};
     return{...cfg,type:plan.type,counts:{ivan:plan.ivan,wife:plan.wife},kcal};
   }
+  function alcoholHistory(state,key){
+    const d=ensureDay(state,key);
+    const info=alcoholInfo(state,key);
+    const eaten=normalizeEatenValue(d.alcoholEaten);
+    const person=(p)=>({
+      planned:Boolean(d.alcohol)&&Number(info.counts[p])>0,
+      consumed:Boolean(d.alcohol)&&Boolean(eaten[p]),
+      count:Number(info.counts[p])||0,
+      kcal:Boolean(d.alcohol)&&eaten[p]?info.kcal[p]:0
+    });
+    return{
+      date:key,
+      enabled:Boolean(d.alcohol),
+      type:info.type,
+      label:info.label,
+      unit:info.unit,
+      ivan:person('ivan'),
+      wife:person('wife'),
+      anyoneConsumed:Boolean(d.alcohol)&&(Boolean(eaten.ivan)||Boolean(eaten.wife))
+    };
+  }
   function resetDay(state,key){state.daysByDate[key]=dayDefaults(key);Store.save(state)}
   function rawMeals(state,key){const d=ensureDay(state,key);return slots.map(([type,label])=>({type,label,recipe:RECIPES[type][d[type]||0],eaten:eatenStatus(state,key,type)}))}
   function alcoholScales(state,key){
@@ -120,5 +141,5 @@ window.MenuEngine=(()=>{
   function totals(state,key){return mealsFor(state,key).reduce((a,m)=>({ivan:a.ivan+m.kcal.ivan,wife:a.wife+m.kcal.wife}),{ivan:0,wife:0})}
   function eatenTotals(state,key){return mealsFor(state,key).reduce((a,m)=>({ivan:a.ivan+(m.eaten&&m.eaten.ivan?m.kcal.ivan:0),wife:a.wife+(m.eaten&&m.eaten.wife?m.kcal.wife:0)}),{ivan:0,wife:0})}
 
-  return{days,slots,ALCOHOL,normalize,ensureDay,getDay,localDateKey,weekDateKeys,dayLabel,formatDate,setRecipe,replacementOptions,randomReplace,toggleEaten,isEaten,eatenStatus,toggleFavorite,isFavorite,toggleExcluded,isExcluded,setAlcoholPlan,toggleAlcoholEaten,disableAlcohol,alcoholInfo,alcoholScales,resetDay,mealsFor,totals,eatenTotals,recentRecipeIds};
+  return{days,slots,ALCOHOL,normalize,ensureDay,getDay,localDateKey,weekDateKeys,dayLabel,formatDate,setRecipe,replacementOptions,randomReplace,toggleEaten,isEaten,eatenStatus,toggleFavorite,isFavorite,toggleExcluded,isExcluded,setAlcoholPlan,toggleAlcoholEaten,disableAlcohol,alcoholInfo,alcoholHistory,alcoholScales,resetDay,mealsFor,totals,eatenTotals,recentRecipeIds};
 })();
