@@ -29,18 +29,50 @@
 
   document.addEventListener('click',e=>{
     if(!detailKey)return;
-    const menuBtn=e.target.closest('#calendarRoot [data-day-menu]');
-    if(!menuBtn)return;
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    const key=menuBtn.dataset.dayMenu;
-    openDayMenu=openDayMenu===key?null:key;
-    renderDetail(detailKey);
+    const inCalendar=e.target.closest('#calendarRoot');
+    if(!inCalendar)return;
+
+    const menuBtn=e.target.closest('[data-day-menu]');
+    if(menuBtn){
+      e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+      const key=menuBtn.dataset.dayMenu;
+      openDayMenu=openDayMenu===key?null:key;
+      renderDetail(detailKey);
+      return;
+    }
+
+    const alcoholBtn=e.target.closest('[data-alcohol]');
+    if(alcoholBtn){
+      e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+      const key=alcoholBtn.dataset.alcohol;
+      openDayMenu=null;
+      renderDetail(detailKey);
+      if(typeof openAlcohol==='function')openAlcohol(key);
+      return;
+    }
+
+    const disableBtn=e.target.closest('[data-disable-alcohol]');
+    if(disableBtn){
+      e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+      MenuEngine.disableAlcohol(state,disableBtn.dataset.disableAlcohol);
+      openDayMenu=null;
+      renderDetail(detailKey);
+      return;
+    }
+
+    const resetBtn=e.target.closest('[data-reset-day]');
+    if(resetBtn){
+      e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+      const key=resetBtn.dataset.resetDay;
+      if(confirm(`Сбросить все изменения за ${MenuEngine.dayLabel(key).toLowerCase()}?`))MenuEngine.resetDay(state,key);
+      openDayMenu=null;
+      renderDetail(detailKey);
+      return;
+    }
   },true);
 
   document.addEventListener('change',e=>{if(detailKey&&e.target.closest('#calendarRoot'))refreshDetailSoon()});
-  document.addEventListener('click',e=>{if(e.target.closest('[data-section-target="calendar"]'))setTimeout(()=>detailKey?renderDetail(detailKey):renderCalendar(),0);if(!detailKey)return;if(e.target.closest('#calendarRoot [data-favorite],#calendarRoot [data-excluded],#calendarRoot [data-disable-alcohol],#calendarRoot [data-reset-day],#calendarRoot [data-delete-manual],#calendarRoot [data-alcohol-eaten]'))refreshDetailSoon();if(e.target.closest('[data-save-alcohol],[data-pick-recipe],[data-random-replace],[data-favorite-replace],[data-restore-recipe],[data-save-manual]'))refreshDetailSoon()});
+  document.addEventListener('click',e=>{if(e.target.closest('[data-section-target="calendar"]'))setTimeout(()=>detailKey?renderDetail(detailKey):renderCalendar(),0);if(!detailKey)return;if(e.target.closest('#calendarRoot [data-favorite],#calendarRoot [data-excluded],#calendarRoot [data-delete-manual],#calendarRoot [data-alcohol-eaten]'))refreshDetailSoon();if(e.target.closest('[data-save-alcohol],[data-pick-recipe],[data-random-replace],[data-favorite-replace],[data-restore-recipe],[data-save-manual]'))refreshDetailSoon()});
 
   window.refreshFoodCalendar=()=>detailKey?renderDetail(detailKey):renderCalendar();
   renderCalendar();
