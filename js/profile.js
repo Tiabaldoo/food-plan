@@ -12,7 +12,8 @@
   function num(value){const n=Number(value);return Number.isFinite(n)?n:''}
   function personTitle(key){return key==='ivan'?'Профиль Ивана':'Профиль Насти'}
   function sexOptions(value){return `<option value="male" ${value==='male'?'selected':''}>Мужской</option><option value="female" ${value==='female'?'selected':''}>Женский</option>`}
-  function activityOptions(value){return Object.entries(calc.activities).map(([key,item])=>`<option value="${key}" ${value===key?'selected':''}>${item.label} — ${item.description}</option>`).join('')}
+  function activityOptions(value){return Object.entries(calc.activities).map(([key,item])=>`<option value="${key}" ${value===key?'selected':''}>${item.label}</option>`).join('')}
+  function activityHelp(value){const item=calc.activities[value]||calc.activities.sedentary;return `${item.description} · коэффициент ${item.factor}`}
   function bodyValue(value){return value==null?'':value}
 
   function recommendationCards(key){
@@ -37,7 +38,7 @@
         <label><span>Рост, см</span><input type="number" min="120" max="230" step="1" value="${num(p.height)}" data-profile-field="${key}|height"></label>
         <label><span>Текущий вес, кг</span><input type="number" min="35" max="300" step="0.1" value="${num(p.weight)}" data-profile-field="${key}|weight"></label>
         <label><span>Целевой вес, кг</span><input type="number" min="35" max="300" step="0.1" value="${num(p.targetWeight)}" data-profile-field="${key}|targetWeight"></label>
-        <label class="profile-field-wide"><span>Активность</span><select data-profile-field="${key}|activity">${activityOptions(p.activity)}</select></label>
+        <label class="profile-field-wide profile-activity-field"><span>Активность</span><select data-profile-field="${key}|activity">${activityOptions(p.activity)}</select><small>${activityHelp(p.activity)}</small></label>
       </div>
 
       <section class="profile-calculator">
@@ -73,22 +74,23 @@
 
   function parseValue(field,value){if(['name','sex','activity'].includes(field))return value;const n=Number(value);return Number.isFinite(n)?n:null}
   function refreshApp(){if(typeof window.refreshFoodCalendar==='function')window.refreshFoodCalendar();if(typeof window.render==='function')window.render()}
+  function saveProfile(){calc.save();refreshApp()}
 
   root.addEventListener('change',e=>{
     const field=e.target.dataset.profileField;
-    if(field){const [key,name]=field.split('|');data[key][name]=parseValue(name,e.target.value);calc.save();render();refreshApp();return}
+    if(field){const [key,name]=field.split('|');data[key][name]=parseValue(name,e.target.value);saveProfile();render();return}
     const body=e.target.dataset.bodyField;
     if(body){const [key,name]=body.split('|');const raw=e.target.value.trim();data[key].body[name]=raw===''?null:Number(raw);calc.save();return}
     const shared=e.target.dataset.sharedField;
-    if(shared){data.shared[shared]=Math.max(0,Number(e.target.value)||0);calc.save();render();refreshApp();return}
+    if(shared){data.shared[shared]=Math.max(0,Number(e.target.value)||0);saveProfile();render();return}
     const mode=e.target.dataset.profileMode;
-    if(mode){data[mode].calorieMode=e.target.value;calc.save();render();refreshApp();return}
+    if(mode){data[mode].calorieMode=e.target.value;saveProfile();render();return}
   });
   root.addEventListener('click',e=>{
     const mobile=e.target.closest('[data-mobile-profile]');
     if(mobile){mobileActive=mobile.dataset.mobileProfile;localStorage.setItem('foodPlanMobileProfileV1',mobileActive);render();return}
     const goal=e.target.closest('[data-profile-goal]');if(!goal)return;
-    const [key,value]=goal.dataset.profileGoal.split('|');data[key].goal=value;calc.save();render();refreshApp();
+    const [key,value]=goal.dataset.profileGoal.split('|');data[key].goal=value;saveProfile();render();
   });
 
   const originalRenderDay=window.renderDay;
@@ -102,5 +104,5 @@
   }
 
   render();
-  if(typeof window.render==='function')window.render();
+  refreshApp();
 })();
