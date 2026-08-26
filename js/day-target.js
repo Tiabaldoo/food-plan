@@ -41,8 +41,8 @@
   function open(key){
     activeKey=key;
     const iv=MenuEngine.targetFor(state,key,'ivan'),wi=MenuEngine.targetFor(state,key,'wife');
-    const piv=Number(PROFILE_DATA?.ivan?.target||PROFILES.ivan.target)||iv;
-    const pwi=Number(PROFILE_DATA?.wife?.target||PROFILES.wife.target)||wi;
+    const piv=Number(window.PROFILE_DATA?.ivan?.target||PROFILES.ivan.target)||iv;
+    const pwi=Number(window.PROFILE_DATA?.wife?.target||PROFILES.wife.target)||wi;
     content.innerHTML=`<p class="eyebrow">${MenuEngine.dayLabel(key)} · ${MenuEngine.formatDate(key)}</p><h2 id="dayTargetTitle">Цель калорий на этот день</h2><p class="day-target-note">Изменение действует только для этой даты и не меняет профили.</p><div class="day-target-fields"><label><span>${PROFILES.ivan.name}</span><input id="dayTargetIvan" type="number" min="900" max="6000" step="10" value="${iv}"></label><label><span>${PROFILES.wife.name}</span><input id="dayTargetWife" type="number" min="900" max="6000" step="10" value="${wi}"></label></div><div class="day-target-current">Текущие цели профилей: <strong>${PROFILES.ivan.name} ${piv} ккал</strong> · <strong>${PROFILES.wife.name} ${pwi} ккал</strong></div><button class="day-target-use-current" type="button" data-use-current-targets>Взять текущие цели из профилей</button><button class="day-target-save" type="button" data-save-day-target>Сохранить для этого дня</button>`;
     modal.classList.add('open');modal.setAttribute('aria-hidden','false');
   }
@@ -51,9 +51,18 @@
   function save(){if(!activeKey)return;const iv=Math.round(Number(document.getElementById('dayTargetIvan')?.value)),wi=Math.round(Number(document.getElementById('dayTargetWife')?.value));if(!Number.isFinite(iv)||!Number.isFinite(wi)||iv<900||wi<900)return;MenuEngine.setDayTargets(state,activeKey,{ivan:iv,wife:wi});close();refresh()}
 
   document.addEventListener('click',e=>{
-    const btn=e.target.closest('[data-day-target]');if(btn){e.preventDefault();e.stopPropagation();openDayMenu=null;open(btn.dataset.dayTarget);return}
+    const btn=e.target.closest('[data-day-target]');
+    if(btn){
+      e.preventDefault();e.stopPropagation();
+      const key=btn.dataset.dayTarget;
+      openDayMenu=null;
+      if(btn.closest('#calendarRoot')&&typeof window.refreshFoodCalendar==='function')window.refreshFoodCalendar();
+      else if(typeof window.render==='function')window.render();
+      open(key);
+      return;
+    }
     if(e.target.closest('[data-close-day-target]')){close();return}
-    if(e.target.closest('[data-use-current-targets]')){document.getElementById('dayTargetIvan').value=Number(PROFILE_DATA?.ivan?.target||PROFILES.ivan.target)||'';document.getElementById('dayTargetWife').value=Number(PROFILE_DATA?.wife?.target||PROFILES.wife.target)||'';return}
+    if(e.target.closest('[data-use-current-targets]')){document.getElementById('dayTargetIvan').value=Number(window.PROFILE_DATA?.ivan?.target||PROFILES.ivan.target)||'';document.getElementById('dayTargetWife').value=Number(window.PROFILE_DATA?.wife?.target||PROFILES.wife.target)||'';return}
     if(e.target.closest('[data-save-day-target]')){save();return}
   });
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close()});
